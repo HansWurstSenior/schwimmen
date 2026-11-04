@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-app-screen="screen-menu">
 <head>
 <script>window.gameLanguage="de";</script>
     <meta charset="UTF-8">
@@ -565,6 +565,8 @@ body { min-height:100dvh; height:auto; overflow-y:auto; }
 </style>
 <style id="reload-protection-429">
 html, body { overscroll-behavior-y: none; }
+html[data-app-screen="screen-menu"],
+html[data-app-screen="screen-menu"] body { overscroll-behavior-y: auto; }
 </style>
 <style>
 #screen-menu{position:relative;padding-top:64px!important;}
@@ -1212,6 +1214,7 @@ html[data-theme="dark"] #count-selector button:active{
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(screenId).classList.remove('hidden');
+            document.documentElement.setAttribute('data-app-screen',screenId);
             if(screenId!=='screen-setup-internet')cancelRoomSearch();
             if(screenId==='screen-setup-internet')prefillOnlineNames();
             if (screenId === 'screen-setup-internet') {
@@ -1361,16 +1364,10 @@ const ICE_CFG = { iceServers: [
             { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
 
         ], iceTransportPolicy: 'all', iceCandidatePoolSize: 0 }; // Best effort: public signaling and PeerJS relays; no connectivity guarantee.
-        // Optional deployment configuration: set window.SCHWIMMEN_ICE_SERVERS
-        // before this script. Use short-lived TURN credentials from your backend.
-        // No new relay is provisioned by this test build.
-        if (Array.isArray(window.SCHWIMMEN_ICE_SERVERS) && window.SCHWIMMEN_ICE_SERVERS.length) {
+        // Optional TURN deployment configuration; credentials should be short-lived.
+        if(Array.isArray(window.SCHWIMMEN_ICE_SERVERS)&&window.SCHWIMMEN_ICE_SERVERS.length){
             const supplied=window.SCHWIMMEN_ICE_SERVERS;
-            const valid=supplied.every(server=>server &&
-                (typeof server.urls==='string'||(Array.isArray(server.urls)&&server.urls.length)) &&
-                (Array.isArray(server.urls)?server.urls:[server.urls]).every(url=>
-                    typeof url==='string'&&/^(stun|stuns|turn|turns):/i.test(url)));
-            if(valid)ICE_CFG.iceServers=supplied;
+            if(supplied.every(server=>server&&(typeof server.urls==='string'||(Array.isArray(server.urls)&&server.urls.length))&&(Array.isArray(server.urls)?server.urls:[server.urls]).every(url=>typeof url==='string'&&/^(stun|stuns|turn|turns):/i.test(url))))ICE_CFG.iceServers=supplied;
             else console.warn('Invalid SCHWIMMEN_ICE_SERVERS; keeping defaults.');
         }
         const PEER_LIB_URL = 'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js';
@@ -1476,7 +1473,7 @@ const ICE_CFG = { iceServers: [
 
         function networkDiagnosticText() {
             const browser=/Firefox\//.test(navigator.userAgent)?'Firefox':/Edg\//.test(navigator.userAgent)?'Edge':/Chrome\//.test(navigator.userAgent)?'Chrome':/Safari\//.test(navigator.userAgent)?'Safari-family':'embedded-or-other';
-            const environment={app:'Schwimmen',version:'4.5.2-test',protocol:ONLINE_PROTOCOL,namespace:ROOM_PREFIX,browser,scheme:location.protocol,embedded:window.self!==window.top,secure:window.isSecureContext,onlineHint:navigator.onLine,webRTC:typeof RTCPeerConnection!=='undefined',peerLibrary:typeof window.Peer==='function',role:mode==='online'?(isHost?'host':'guest'):'none',phase:gamePhase,registered:!!peer?.open,reloadProtection:shouldProtectReload(),overscrollProtection:typeof CSS!=='undefined'&&CSS.supports('overscroll-behavior-y','none'),room:netRoom(ROOM_PREFIX+currentRoomCode),hidden:document.hidden};
+            const environment={app:'Schwimmen',version:'4.5.2-test',protocol:ONLINE_PROTOCOL,namespace:ROOM_PREFIX,browser,scheme:location.protocol,embedded:window.self!==window.top,secure:window.isSecureContext,onlineHint:navigator.onLine,webRTC:typeof RTCPeerConnection!=='undefined',peerLibrary:typeof window.Peer==='function',role:mode==='online'?(isHost?'host':'guest'):'none',phase:gamePhase,registered:!!peer?.open,reloadProtection:shouldProtectReload(),overscrollProtection:document.documentElement.getAttribute('data-app-screen')!=='screen-menu'&&typeof CSS!=='undefined'&&CSS.supports('overscroll-behavior-y','none'),room:netRoom(ROOM_PREFIX+currentRoomCode),hidden:document.hidden};
             return JSON.stringify({environment,privacy:'Memory-only ring log. No PINs, names, tokens, hands, SDP, candidates or IP addresses. Browser family and timestamps included.',log:netDiagnosticLog},null,2);
         }
         function renderNetDiagnostics(){const field=document.getElementById('net-diagnostic-text');if(field)field.value=networkDiagnosticText();}
