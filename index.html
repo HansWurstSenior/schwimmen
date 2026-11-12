@@ -219,6 +219,24 @@
 #net-diagnostic-text {display:block;width:100%;height:38vh;min-height:140px;box-sizing:border-box;background:#022c22;color:#ecfdf5;border:1px solid #34d399;border-radius:8px;padding:8px;font:11px/1.4 monospace;white-space:pre;overflow:auto;user-select:text;-webkit-user-select:text;}
 .net-diag-actions {display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-top:1px solid #047857;}
 #net-diag-feedback {font-size:12px;}
+
+/* Winner celebration: local graphics and synthesized fanfare. */
+#modal-game-over {overflow:hidden; isolation:isolate; background:radial-gradient(ellipse at 50% 35%,#176849 0%,#063426 48%,#021b14 100%);}
+#modal-game-over .winner-panel {position:relative;z-index:2;background:linear-gradient(145deg,rgba(14,77,53,.97),rgba(3,38,28,.97));border-color:#f5d278;box-shadow:0 0 42px #e9bb4340,inset 0 0 30px #f5cd6310;animation:winner-arrive .85s cubic-bezier(.2,.8,.2,1) both;max-height:95%;overflow:auto;}
+#modal-game-over .winner-crown {animation:winner-float 3s ease-in-out infinite;filter:drop-shadow(0 0 18px #ffd56999);}
+#modal-game-over #winner-name {color:#ffe8a3;text-shadow:0 2px 12px #ffcb5055;overflow-wrap:anywhere;}
+.winner-rays {position:absolute;inset:-100%;pointer-events:none;background:repeating-conic-gradient(from 0deg,transparent 0deg 18deg,#f7d8780c 18deg 30deg);animation:winner-rays 45s linear infinite;}
+.winner-suits {display:flex;justify-content:center;gap:10px;margin:0 0 18px;}
+.winner-suits span {display:grid;place-items:center;width:36px;height:48px;background:linear-gradient(140deg,#fffdf3,#e9dfc7);color:#142b25;border:1px solid #ffe29a;border-radius:7px;font-size:26px;box-shadow:0 5px 12px #0005;animation:winner-float 2.5s ease-in-out infinite;transform:rotate(-9deg);}
+.winner-suits span:nth-child(2n){color:#bf293e;animation-delay:-.6s;}
+.winner-suits span:nth-child(3){animation-delay:-1.2s;}
+.winner-suits span:nth-child(4){animation-delay:-1.8s;}
+#winner-confetti {position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;}
+@keyframes winner-arrive {from {opacity:0;transform:translateY(28px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes winner-float {0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-8px) rotate(5deg)}}
+@keyframes winner-rays {to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){#modal-game-over *,#modal-game-over .winner-panel,#modal-game-over .winner-crown{animation:none!important}.winner-rays{display:none}}
+
 </style>
     <style>
 *, ::before, ::after { --tw-border-spacing-x: 0; --tw-border-spacing-y: 0; --tw-translate-x: 0; --tw-translate-y: 0; --tw-rotate: 0; --tw-skew-x: 0; --tw-skew-y: 0; --tw-scale-x: 1; --tw-scale-y: 1; --tw-pan-x: ; --tw-pan-y: ; --tw-pinch-zoom: ; --tw-scroll-snap-strictness: proximity; --tw-gradient-from-position: ; --tw-gradient-via-position: ; --tw-gradient-to-position: ; --tw-ordinal: ; --tw-slashed-zero: ; --tw-numeric-figure: ; --tw-numeric-spacing: ; --tw-numeric-fraction: ; --tw-ring-inset: ; --tw-ring-offset-width: 0px; --tw-ring-offset-color: #fff; --tw-ring-color: rgb(59 130 246 / 0.5); --tw-ring-offset-shadow: 0 0 #0000; --tw-ring-shadow: 0 0 #0000; --tw-shadow: 0 0 #0000; --tw-shadow-colored: 0 0 #0000; --tw-blur: ; --tw-brightness: ; --tw-contrast: ; --tw-grayscale: ; --tw-hue-rotate: ; --tw-invert: ; --tw-saturate: ; --tw-sepia: ; --tw-drop-shadow: ; --tw-backdrop-blur: ; --tw-backdrop-brightness: ; --tw-backdrop-contrast: ; --tw-backdrop-grayscale: ; --tw-backdrop-hue-rotate: ; --tw-backdrop-invert: ; --tw-backdrop-opacity: ; --tw-backdrop-saturate: ; --tw-backdrop-sepia: ; --tw-contain-size: ; --tw-contain-layout: ; --tw-contain-paint: ; --tw-contain-style: ; }
@@ -1122,8 +1140,9 @@ html[data-theme="dark"] #count-selector button:active{
 
         <!-- ================= 7. GAME OVER MODAL ================= -->
         <div id="modal-game-over" class="hidden absolute inset-0 bg-emerald-950 z-50 flex flex-col items-center justify-center p-6 text-center safe-bottom">
-            <div class="p-6 bg-emerald-900 rounded-3xl border-2 border-amber-400 shadow-2xl max-w-xs w-full">
-                <div class="text-6xl mb-3 animate-bounce">👑</div>
+            <div class="winner-rays" aria-hidden="true"></div><canvas id="winner-confetti" aria-hidden="true"></canvas>
+            <div class="winner-panel p-6 bg-emerald-900 rounded-3xl border-2 border-amber-400 shadow-2xl max-w-xs w-full">
+                <div class="winner-crown text-6xl mb-3" aria-hidden="true">👑</div><div class="winner-suits" aria-hidden="true"><span>♠</span><span>♥</span><span>♣</span><span>♦</span></div>
                 <p class="text-xs font-black uppercase tracking-widest text-amber-400 mb-1">GEWINNER!</p>
                 <h2 id="winner-name" class="text-3xl font-serif font-black text-white mb-2">Spieler 1</h2>
                 <p class="text-xs text-emerald-200 mb-6">Alle anderen Spieler sind ausgeschieden!</p>
@@ -2488,6 +2507,7 @@ const ICE_CFG = { iceServers: [
 
         function toggleSound() {
             soundOn = !soundOn;
+            if(!soundOn)stopWinnerCelebration();
             try { localStorage.setItem('schwimmen_sound', soundOn ? 'on' : 'off'); } catch (e) {}
             updateSoundButtons();
             if (soundOn) playKnock(); // Hörprobe
@@ -2954,6 +2974,59 @@ const ICE_CFG = { iceServers: [
             }
         }
 
+
+let winnerFrame=0,winnerNotes=[],winnerRun=0;
+function stopWinnerCelebration(){
+    cancelAnimationFrame(winnerFrame);winnerFrame=0;winnerRun++;
+    for(const n of winnerNotes){try{n.osc.stop();n.osc.disconnect();n.gain.disconnect();}catch(_){}}
+    winnerNotes=[];
+    const c=document.getElementById('winner-confetti');if(c){const g=c.getContext('2d');if(g)g.clearRect(0,0,c.width,c.height);}
+}
+function playWinnerMelody(){
+    if(!soundOn||document.hidden)return;
+    const ctx=getAudio();if(!ctx)return;
+    const run=winnerRun;
+    const schedule=()=>{
+        if(run!==winnerRun||!soundOn||document.hidden||document.getElementById('modal-game-over').classList.contains('hidden'))return;
+        const t=ctx.currentTime+.04;
+        const notes=[[0,523.25,.16],[.18,659.25,.16],[.36,783.99,.2],[.62,1046.5,.35],[1.05,880,.18],[1.28,987.77,.18],[1.52,1046.5,.85],[1.52,659.25,.85],[1.52,783.99,.85],[1.52,261.63,.95]];
+        for(const [delay,freq,duration] of notes){
+            const osc=ctx.createOscillator(),gain=ctx.createGain(),at=t+delay;
+            osc.type='triangle';osc.frequency.value=freq;
+            gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.065,at+.02);gain.gain.exponentialRampToValueAtTime(.0001,at+duration);
+            osc.connect(gain);gain.connect(ctx.destination);osc.start(at);osc.stop(at+duration+.03);
+            const entry={osc,gain};winnerNotes.push(entry);osc.onended=()=>{osc.disconnect();gain.disconnect();winnerNotes=winnerNotes.filter(n=>n!==entry);};
+        }
+    };
+    if(ctx.state==='running')schedule();else ctx.resume().then(schedule).catch(()=>{});
+}
+function startWinnerCelebration(){
+    stopWinnerCelebration();
+    if(document.hidden)return;
+    playWinnerMelody();
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const canvas=document.getElementById('winner-confetti'),g=canvas.getContext('2d');if(!g)return;
+    const modal=document.getElementById('modal-game-over');
+    let w=0,h=0,last=0,start=0;
+    const colors=['#ffd76a','#fff1bd','#42d9a0','#f37088','#9bbaff'];
+    const particles=Array.from({length:125},()=>({x:Math.random(),y:-Math.random()*1.6,v:70+Math.random()*105,drift:Math.random()*50-25,angle:Math.random()*6.28,spin:Math.random()*5-2.5,size:4+Math.random()*6,color:colors[Math.floor(Math.random()*colors.length)],suit:Math.random()<.15}));
+    function frame(now){
+        if(modal.classList.contains('hidden')||document.hidden){stopWinnerCelebration();return;}
+        if(!start)start=now;
+        const dt=last?Math.min((now-last)/1000,.05):0;last=now;
+        const rect=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
+        if(w!==rect.width||h!==rect.height){w=rect.width;h=rect.height;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);g.setTransform(dpr,0,0,dpr,0,0);}
+        g.clearRect(0,0,w,h);
+        for(const p of particles){p.y+=p.v*dt/Math.max(h,1);p.x+=p.drift*dt/Math.max(w,1);p.angle+=p.spin*dt;if(p.y>1.08&&now-start<6500){p.y=-.1;p.x=Math.random();}
+            g.save();g.translate(p.x*w,p.y*h);g.rotate(p.angle);g.fillStyle=p.color;g.globalAlpha=Math.min(1,(10000-(now-start))/1500);
+            if(p.suit){g.font='18px serif';g.fillText('♦',0,0);}else{g.scale(Math.cos(p.angle),1);g.fillRect(-p.size/2,-p.size/2,p.size,p.size*.6);}g.restore();
+        }
+        if(now-start<10000)winnerFrame=requestAnimationFrame(frame);else{g.clearRect(0,0,w,h);winnerFrame=0;}
+    }
+    winnerFrame=requestAnimationFrame(frame);
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopWinnerCelebration();});
+
         function showWinnerModal(winnerName) {
             lastWinnerName=winnerName;
             gamePhase = 'gameOver';
@@ -2962,10 +3035,12 @@ const ICE_CFG = { iceServers: [
             hideHand789Dialog();
             document.getElementById('winner-name').innerText = winnerName;
             document.getElementById('modal-game-over').classList.remove('hidden');
+            startWinnerCelebration();
             syncRematchButton();
         }
 
         function resetGameToSetup() {
+            stopWinnerCelebration();
             teardownNetwork();
             resetInternetUI();
             document.getElementById('modal-game-over').classList.add('hidden');
@@ -3645,6 +3720,7 @@ const ICE_CFG = { iceServers: [
             document.getElementById('rematch-hint').textContent=guest?'Der Host kann im gleichen Raum eine neue Partie starten.':netBlocked()?'Warte auf die Wiederverbindung aller Spieler.':'Gleiche Spieler · neue Karten · alle starten mit drei Leben.';
         }
         function clearEndOverlays() {
+            stopWinnerCelebration();
             ['modal-game-over','modal-round-end','modal-confirm-swap','modal-lives-overview','screen-pass'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
             hand789Decision=null;hideHand789Dialog();resetSelections();
         }
